@@ -1,0 +1,42 @@
+packages: []
+catalogs:
+  build:
+    unbuild: ^3.6.1
+  cli:
+    bumpp: ^10.3.1
+    pncat: ^0.7.4
+    taze: ^19.8.1
+  lint:
+    '@antfu/eslint-config': ^6.1.0
+    eslint: ^9.38.0
+    lint-staged: ^16.2.6
+    simple-git-hooks: ^2.13.1
+  network:
+    ofetch: ^1.4.1
+  node:
+    '@clack/prompts': ^0.11.0
+    adm-zip: ^0.5.16
+    ansis: ^4.2.0
+    cac: ^6.7.14
+    package-manager-detector: ^1.5.0
+    pathe: ^2.0.3
+    rimraf: ^6.0.1
+    tildify: ^3.0.0
+    tinyexec: ^1.0.1
+    tinyglobby: ^0.2.15
+    unconfig: ^7.3.3
+  script:
+    tsx: ^4.20.6
+  test:
+    vitest: ^4.0.3
+  tsc:
+    typescript: ^5.9.3
+  types:
+    '@types/adm-zip': ^0.5.7
+    '@types/node': ^24.9.1
+  utils:
+    '@antfu/utils': ^9.3.0
+    p-retry: ^7.1.0
+onlyBuiltDependencies:
+  - esbuild
+  - simple-git-hooks

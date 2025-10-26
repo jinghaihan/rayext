@@ -1,0 +1,86 @@
+{
+  "name": "rayext",
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.19.0",
+  "description": "A decentralized extension manager for Raycast.",
+  "author": "jinghaihan",
+  "license": "MIT",
+  "homepage": "https://github.com/jinghaihan/rayext#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jinghaihan/rayext.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jinghaihan/rayext/issues"
+  },
+  "keywords": [
+    "raycast",
+    "extension",
+    "manager"
+  ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "bin": {
+    "rayext": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "scripts": {
+    "start": "tsx ./src/cli.ts",
+    "build": "unbuild",
+    "deps": "taze major -I",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "release": "bumpp",
+    "bootstrap": "pnpm install",
+    "prepare": "simple-git-hooks",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@clack/prompts": "catalog:node",
+    "ansis": "catalog:node",
+    "cac": "catalog:node",
+    "ofetch": "catalog:network",
+    "package-manager-detector": "catalog:node",
+    "pathe": "catalog:node",
+    "tinyexec": "catalog:node",
+    "tinyglobby": "catalog:node",
+    "unconfig": "catalog:node"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:lint",
+    "@antfu/utils": "catalog:utils",
+    "@types/adm-zip": "catalog:types",
+    "@types/node": "catalog:types",
+    "adm-zip": "catalog:node",
+    "bumpp": "catalog:cli",
+    "eslint": "catalog:lint",
+    "lint-staged": "catalog:lint",
+    "p-retry": "catalog:utils",
+    "pncat": "catalog:cli",
+    "rimraf": "catalog:node",
+    "simple-git-hooks": "catalog:lint",
+    "taze": "catalog:cli",
+    "tildify": "catalog:node",
+    "tsx": "catalog:script",
+    "typescript": "catalog:tsc",
+    "unbuild": "catalog:build",
+    "vitest": "catalog:test"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
+  }
+}
