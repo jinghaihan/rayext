@@ -1,7 +1,7 @@
 {
   "name": "rayext",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "packageManager": "pnpm@10.19.0",
   "description": "A decentralized extension manager for Raycast.",
   "author": "jinghaihan",
