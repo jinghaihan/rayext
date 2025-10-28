@@ -29,11 +29,11 @@ export interface CommandOptions {
 export type Manifest = Record<string, ExtensionConfig>
 
 export interface ExtensionConfig {
-  github: string
+  repository: string
   package?: string
   title: string
   description?: string
-  repository?: string
+  url?: string
   license?: string
   author?: string | {
     name: string
@@ -45,9 +45,6 @@ export interface ExtensionConfig {
   commands?: ExtensionCommand[]
   preferences?: ExtensionPreference[]
   dependencies?: Record<string, string>
-  devDependencies?: Record<string, string>
-  optionalDependencies?: Record<string, string>
-  peerDependencies?: Record<string, string>
   tag?: string
   branch?: string
   commit?: GithubCommit

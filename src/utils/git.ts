@@ -1,11 +1,12 @@
 import type { CommandOptions, GithubBranch, GithubTag } from '../types'
+import process from 'node:process'
 import { ofetch } from 'ofetch'
 import pRetry from 'p-retry'
-import { DEFAULT_RETRIES, VERSION } from '../constants'
+import { DEFAULT_RETRIES } from '../constants'
 
 function getRequestHeaders(options: CommandOptions) {
   const headers: Record<string, string> = {
-    'user-agent': `rayext@npm node/${VERSION}`,
+    'user-agent': `rayext@npm node/${process.version}`,
   }
   if (options.token)
     headers.Authorization = `token ${options.token}`

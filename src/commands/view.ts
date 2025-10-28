@@ -29,7 +29,10 @@ export async function viewCommand(options: CommandOptions) {
 
   const content: string[] = []
 
-  content.push(c.reset(`[>] ${c.bold('github')}: ${c.reset(c.cyan(config?.repository ?? `https://github.com/${name}`))}`))
+  if (config?.url || config?.repository) {
+    const url = config.url || `https://github.com/${config.repository}`
+    content.push(c.reset(`[>] ${c.bold('github')}: ${c.reset(c.cyan(url))}`))
+  }
 
   if (config?.description) {
     content.push(c.reset(`[i] ${c.bold('description')}: ${c.reset(c.cyan(config.description))}`))

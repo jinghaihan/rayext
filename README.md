@@ -8,8 +8,8 @@
 [![License][license-src]][license-href]
 
 ```sh
-npx rayext <author>/<repo> [<options>]
-npx rayext <author>/<repo>@<tag> [<options>]
+npx rayext install <author>/<repo> [<options>]
+npx rayext install <author>/<repo>@<tag> [<options>]
 ```
 
 - 📦 <samp><b>Install extensions</samp></b> - directly from any GitHub repository
@@ -19,16 +19,71 @@ npx rayext <author>/<repo>@<tag> [<options>]
 - 🗑️ <samp><b>Uninstall extensions</samp></b> - remove from local system
 
 <div align="center">
-  <img src="/assets/install.gif" alt="dark" width="45%">
-  <img src="/assets/help.png" alt="light" width="50%">
+  <img src="/assets/install.gif" alt="dark" width="50%">
+  <img src="/assets/help.png" alt="light" width="45%">
 </div>
 
-## Monorepo
+## Usage
 
-For repositories containing multiple extensions or packages, use the `--package` option to specify the path to the specific extension package:
+### Install
+
+Install a Raycast extension from a GitHub repository.
 
 ```sh
-npx rayext <author>/<repo> --package 'packages/extension'
+npx rayext install <author>/<repo>
+npx rayext i <author>/<repo>
+npx rayext add <author>/<repo>
+```
+
+#### Monorepo
+
+> [!NOTE]
+> For repositories containing multiple extensions or packages, use the `--package` option to specify the path to the specific extension package:
+
+```sh
+npx rayext install <author>/<repo> --package 'packages/extension'
+```
+
+### List
+
+Display all installed extensions with their tags or branches.
+
+```sh
+npx rayext list
+npx rayext ls
+```
+
+### View
+
+Show detailed information about an installed extension, including metadata and configuration.
+
+```sh
+npx rayext view <author>/<repo>
+npx rayext v <author>/<repo>
+npx rayext info <author>/<repo>
+npx rayext show <author>/<repo>
+```
+
+### Update
+
+Update an installed extension to the latest version available in its repository.
+
+```sh
+npx rayext update <author>/<repo>
+npx rayext upgrade <author>/<repo>
+npx rayext up <author>/<repo>
+```
+
+### Uninstall
+
+Remove an installed extension from your local file system. You need remove the extension from your Raycast app manually.
+
+```sh
+npx rayext uninstall <author>/<repo>
+npx rayext un <author>/<repo>
+npx rayext u <author>/<repo>
+npx rayext remove <author>/<repo>
+npx rayext rm <author>/<repo>
 ```
 
 ## GitHub Token
@@ -37,11 +92,11 @@ GitHub API has rate limits. For high-frequency usage, it's recommended to provid
 
 ```sh
 # Using token parameter
-npx rayext <author>/<repo> --token <token>
+npx rayext install <author>/<repo> --token <token>
 
 # Or set environment variable
 export GITHUB_TOKEN=<token>
-npx rayext <author>/<repo>
+npx rayext install <author>/<repo>
 ```
 
 ## Why ?

@@ -13,22 +13,22 @@ export async function updateCommand(options: CommandOptions) {
 
   if (args.length) {
     const { data } = parseArgs(args)
-    await Promise.all(data.map(async (i) => {
-      const { name } = parseTag(i)
-      const config = await manifest.readExtension(name)
-      if (!config) {
-        p.outro(c.red('no extension name found, aborting'))
-        process.exit(1)
-      }
+    const [ext] = data
 
-      const extension = new Extension(manifest, {
-        ...options,
-        name,
-        tag: config.tag,
-        branch: config.branch,
-      })
-      await extension.update()
-    }))
+    const { name } = parseTag(ext)
+    const config = await manifest.readExtension(name)
+    if (!config) {
+      p.outro(c.red('no extension name found, aborting'))
+      process.exit(1)
+    }
+
+    const extension = new Extension(manifest, {
+      ...options,
+      name,
+      tag: config.tag,
+      branch: config.branch,
+    })
+    await extension.update()
   }
   else {
     const data = await manifest.readManifest()

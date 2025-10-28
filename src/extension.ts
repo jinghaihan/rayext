@@ -27,13 +27,14 @@ interface ExtensionOptions extends CommandOptions {
 export class Extension {
   private manifest: ManifestManager
   private options: ExtensionOptions
+
   private name: string
   private tag?: string
   private branch?: string
 
   private tagList: GithubTag[] = []
   private branchList: GithubBranch[] = []
-  private defaultBranch: string = ''
+  private defaultBranch?: string
 
   constructor(manifest: ManifestManager, options: ExtensionOptions) {
     this.manifest = manifest
@@ -41,14 +42,18 @@ export class Extension {
     this.name = options.name
   }
 
+  getKey(path?: string) {
+    return path ? `${this.name}${path}` : this.name
+  }
+
   private getPackages() {
     return this.options.package ? toArray(this.options.package) : []
   }
 
-  async install() {
+  async install(url?: string) {
     const packages = this.getPackages()
 
-    await this.download()
+    await this.download(url)
 
     await this.cleanup()
 
@@ -79,16 +84,22 @@ export class Extension {
       process.exit(1)
     }
 
-    const configs: ExtensionConfig[] = []
+    const extensions: ExtensionConfig[] = []
     for (const key of Object.keys(manifest)) {
       const config = manifest[key]
       if (config.repository === this.name)
-        configs.push(config)
+        extensions.push(config)
     }
 
-    if (configs.length > 1) {
-      p.log.warn(c.yellow('multiple extensions found, can\'t uninstall'))
-      return
+    if (extensions.length > 1) {
+      const result = p.confirm({
+        message: `${extensions.map(i => i.title).join(', ')} will be uninstalled, continue?`,
+        initialValue: false,
+      })
+      if (!result || p.isCancel(result)) {
+        p.outro(c.red('aborting'))
+        process.exit(1)
+      }
     }
 
     const extpath = this.getExtpath(false)
@@ -97,20 +108,44 @@ export class Extension {
   }
 
   async update() {
-    if (this.options.branch && !this.options.tag) {
+    const reinstall = async (message: string) => {
       const result = await p.confirm({
-        message: `the last installed version is a branch, do you want to reinstall it?`,
+        message,
         initialValue: true,
       })
       if (!result || p.isCancel(result)) {
-        p.log.info(c.red('skipping'))
-        return
+        p.outro(c.red('aborting'))
+        process.exit(1)
       }
       return await this.install()
     }
 
+    // last installed version is a branch
+    if (this.options.branch && !this.options.tag) {
+      const config = await this.manifest.readExtension(this.name)
+      if (!config)
+        return await reinstall('can\'t find the extension in the manifest, do you want to reinstall it?')
+
+      await this.detectBranches()
+      const branchCommit = this.branchList.find(i => i.name === this.options.branch)?.commit
+      if (!branchCommit)
+        return await reinstall('can\'t find the branch at the remote, do you want to reinstall it?')
+
+      // the commit of the last installed version is not the same as the commit of the branch
+      if (config.commit?.sha !== branchCommit.sha) {
+        return await this.install(`https://api.github.com/repos/${this.name}/zipball/${this.options.branch}`)
+      }
+      else {
+        p.log.info(`${c.green('✓')} already on the latest branch`)
+        return
+      }
+    }
+
+    // last installed version is a tag
     await this.detectTags()
     const index = this.tagList.findIndex(t => t.name === this.options.tag)
+
+    // not the latest tag
     if (index !== 0 && this.tagList.length) {
       this.tag = this.tagList[0].name
       p.log.info(`updating to: ${c.yellow(this.tag)}`)
@@ -155,15 +190,13 @@ export class Extension {
   private async updateConfig(cwd: string = this.getExtpath()) {
     const filepath = join(cwd, 'package.json')
     const data = JSON.parse(await readFile(filepath, 'utf-8'))
-
     const path = cwd.replace(this.getExtpath(), '')
-    const key = path ? `${this.name}@${path}` : this.name
 
-    await this.manifest.updateExtension(key, {
-      github: this.name,
+    await this.manifest.updateExtension(this.getKey(path), {
+      repository: this.name,
       package: path,
       title: data.title || data.name || this.name,
-      repository: `https://github.com/${this.name}`,
+      url: `https://github.com/${this.name}`,
       description: data.description,
       license: data.license,
       author: data.author,
@@ -182,9 +215,6 @@ export class Extension {
         }
       }),
       dependencies: data.dependencies,
-      devDependencies: data.devDependencies,
-      optionalDependencies: data.optionalDependencies,
-      peerDependencies: data.peerDependencies,
       tag: this.tag,
       branch: this.branch,
       commit: this.tagList.find(t => t.name === this.tag)?.commit ?? this.branchList.find(b => b.name === this.branch)?.commit,
@@ -235,8 +265,8 @@ export class Extension {
         initialValue: this.tagList[0]?.name,
       })
       if (!result || p.isCancel(result)) {
-        p.log.info(c.red('skipping'))
-        return
+        p.outro(c.red('aborting'))
+        process.exit(1)
       }
       this.tag = result
     }
@@ -254,10 +284,11 @@ export class Extension {
     this.defaultBranch = await getRepoDefaultBranch(this.name, this.options)
     spinner.stop(`${c.green('✓')} branches fetched`)
 
-    if (this.branch && this.branchList.find(b => b.name === this.branch))
-      return
+    if (this.branchList.find(b => b.name === this.options.branch))
+      this.branch = this.options.branch
+    else
+      this.branch = this.defaultBranch
 
-    this.branch = this.defaultBranch
     if (this.branchList.length > 1) {
       const result = await p.select({
         message: `select a branch for ${c.yellow(this.name)}`,
@@ -265,18 +296,18 @@ export class Extension {
           label: b.name,
           value: b.name,
         })),
-        initialValue: this.defaultBranch,
+        initialValue: this.branch,
       })
       if (!result || p.isCancel(result)) {
-        p.log.info(c.red('skipping'))
-        return
+        p.outro(c.red('aborting'))
+        process.exit(1)
       }
       this.branch = result
     }
   }
 
-  private async download() {
-    const url = await this.getURL()
+  private async download(url?: string) {
+    url = url || await this.getURL()
     const extpath = this.getExtpath()
 
     if (!this.options.yes && existsSync(extpath)) {
@@ -285,8 +316,8 @@ export class Extension {
         initialValue: false,
       })
       if (!result || p.isCancel(result)) {
-        p.log.info(c.red('skipping'))
-        return
+        p.outro(c.red('aborting'))
+        process.exit(1)
       }
       await rimraf(extpath)
     }
@@ -313,6 +344,35 @@ export class Extension {
     spinner.stop(`${c.green('✓')} downloaded`)
   }
 
+  private async ensurePackageManager(cwd: string, agent: string) {
+    try {
+      await x(agent, ['-v'], {
+        nodeOptions: {
+          stdio: 'inherit',
+          cwd,
+          shell: true,
+        },
+      })
+    }
+    catch {
+      const result = await p.confirm({
+        message: `${agent} not found, install it?`,
+        initialValue: true,
+      })
+      if (!result || p.isCancel(result)) {
+        p.log.info(c.red('aborting'))
+        process.exit(1)
+      }
+      await x('npm', ['install', agent], {
+        nodeOptions: {
+          stdio: 'inherit',
+          cwd,
+          shell: true,
+        },
+      })
+    }
+  }
+
   private async detectPackageManager(): Promise<Agent | undefined> {
     const extpath = this.getExtpath()
     const { agent } = await detect({ cwd: extpath }) || {}
@@ -334,6 +394,7 @@ export class Extension {
       console.warn('[rayext] Unknown packageManager command:')
       return
     }
+    await this.ensurePackageManager(extpath, command)
 
     await x(command, args, {
       nodeOptions: {
@@ -349,7 +410,13 @@ export class Extension {
     if (!agent)
       return
 
-    const proc = x(agent, ['ray', 'develop'], {
+    const { command } = resolveCommand(agent, 'install', []) || {}
+    if (!command) {
+      console.warn('[rayext] Unknown packageManager command:')
+      return
+    }
+
+    const proc = x(command, ['ray', 'develop'], {
       nodeOptions: {
         stdio: 'pipe',
         cwd,

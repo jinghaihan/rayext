@@ -89,9 +89,9 @@ export class ManifestManager {
     await this.updateManifest(manifest)
   }
 
-  async updateExtension(name: string, config: Partial<ExtensionConfig>) {
+  async updateExtension(name: string, config: ExtensionConfig) {
     const manifest = await this.readManifest() ?? {}
-    manifest[name] = { ...manifest[name], ...config }
+    manifest[name] = config
     await this.updateManifest(manifest)
   }
 }

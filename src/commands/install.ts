@@ -11,16 +11,15 @@ export async function installCommand(options: CommandOptions) {
 
   const manifest = new ManifestManager(options)
   const { data } = parseArgs(args)
+  const [ext] = data
 
-  for (const i of data) {
-    const { name, tag } = parseTag(i)
-    const extension = new Extension(manifest, {
-      ...options,
-      name,
-      tag,
-    })
-    await extension.install()
-  }
+  const { name, tag } = parseTag(ext)
+  const extension = new Extension(manifest, {
+    ...options,
+    name,
+    tag,
+  })
+  await extension.install()
 
   p.outro(c.green(`install completed`))
 }
